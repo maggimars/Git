@@ -163,12 +163,12 @@ names(mat_colors$condition) <- c("wt", "snf2")
 
 genes <- order(res$padj)[1:1000]
 
- pheatmap(assay(vsd)[genes, ], cluster_rows=TRUE, show_rownames=FALSE,
+ pheatmap(assay(vsd)[genes, ], cluster_rows=TRUE, show_rownames=FALSE, show_colnames = FALSE,
          cluster_cols=FALSE, annotation_col=df, annotation_colors = c(mat_colors1, mat_colors), fontsize = 12)
 ```
 
 Another option for heat maps: 
-plot the difference from the mean for each sample 
+plot the difference from the mean normalized count across samples 
 (and optionally change default colors)
 
 #
@@ -211,6 +211,17 @@ pheatmap(mat,  cluster_rows=TRUE, show_rownames=FALSE,
 ```
 
 
+## cool interactive plotting options
+ ....
+ 
+# Gene Set Enrichment Testing 
+
+## GO term enrichment
+
+get data frame of DESeq2 results:
+```{r}
+DEres <- as.data.frame(res)
+```
 
 
 
