@@ -16,8 +16,10 @@ knitr::opts_chunk$set(cache=TRUE, fig.path='figures/', fig.width=8, fig.height=5
 ```
 
 # Differential Expression Testing
-Load Libraries: 
 
+Read the docs: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html
+
+Load Libraries: 
 ```{r, warning = FALSE, message = FALSE}
 library(tximport)
 library(DESeq2)
@@ -48,3 +50,78 @@ dds$condition <- relevel(dds$condition, ref = "wt") # make wild-type the referen
 ```
 
 Run DESeq2: 
+```{r, cache = TRUE}
+dds <- DESeq(dds)
+```
+
+Check out results: 
+```{r}
+res <- results(dds)
+head(res)
+```
+
+Summarize results
+```{r}
+summary(res, alpha = 0.05) # default significance cut-off is 0.1, changing alpha to 0.05 changes the significance cut-off 
+```
+
+# Visualizing RNA-seq results 
+
+## Normalization
+
+**Count Data Transformations:** 
+for ranking and visualizations (e.g. PCA plots and heatmaps)
+
+**rlog**: "transforms the count data to the log2 scale in a way which minimizes differences between samples for rows with small counts, and which normalizes with respect to library size. The rlog transformation produces a similar variance stabilizing effect as varianceStabilizingTransformation, though rlog is more robust in the case when the size factors vary widely. The transformation is useful when checking for outliers or as input for machine learning techniques such as clustering or linear discriminant analysis." -- from function documentation 
+
+This is computationally very time intensive. 
+
+```{r, cache=TRUE}
+rld <- rlog(dds, blind=TRUE)
+head(assay(rld), 3)
+```
+
+** Variance stabilizing transformation (so much faster than rlog):**
+"This function calculates a variance stabilizing transformation (VST) from the fitted dispersion-mean relation(s) and then transforms the count data (normalized by division by the size factors or normalization factors), yielding a matrix of values which are now approximately homoskedastic (having constant variance along the range of mean values). The transformation also normalizes with respect to library size. The rlog is less sensitive to size factors, which can be an issue when size factors vary widely. These transformations are useful when checking for outliers or as input for machine learning techniques such as clustering or linear discriminant analysis."" – from function documentation
+
+```{r, cache = TRUE}
+vsd <- vst(dds, blind = TRUE)
+head(assay(vsd), 3)
+```
+
+## Ordination
+
+rlog PCA: 
+```{r}
+data1 <- plotPCA(rld, returnData=TRUE)
+data1$group<-gsub(" : ","_",as.character(data1$group))
+percentVar1 <- round(100 * attr(data1, "percentVar"))
+
+PCA<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
+  geom_point(size=9, alpha = 0.8) + scale_colour_manual(values = c("#44aabb","#bbbbbb"))+
+  xlab(paste0("PC1: ",percentVar1[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar1[2],"% variance")) +
+  theme(text = element_text(size=20)) + ggtitle("rlog PCA")
+PCA
+#ggsave("vsd_PCA.png", device="png") # to save the plot
+```
+
+
+variance stabilized PCA:
+```{r}
+data1 <- plotPCA(vsd, returnData=TRUE)
+data1$group<-gsub(" : ","_",as.character(data1$group))
+percentVar1 <- round(100 * attr(data1, "percentVar"))
+
+PCA<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
+  geom_point(size=9, alpha = 0.8) + scale_colour_manual(values = c("#44aabb","#bbbbbb"))+
+  xlab(paste0("PC1: ",percentVar1[1],"% variance")) +
+  ylab(paste0("PC2: ",percentVar1[2],"% variance")) +
+  theme(text = element_text(size=20)) + ggtitle("vst PCA")
+PCA
+#ggsave("vsd_PCA.png", device="png") # to save the plot
+```
+
+
+
+
