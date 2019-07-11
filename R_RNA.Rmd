@@ -15,22 +15,36 @@ output: html_document:
 knitr::opts_chunk$set(cache=TRUE, fig.path='figures/', fig.width=8, fig.height=5 )
 ```
 
-## R Markdown
+# Differential Expression Testing
+Load Libraries: 
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r, warning = FALSE, message = FALSE}
+library(tximport)
+library(DESeq2)
+library(tidyverse)
 ```
 
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+Import sample metadata: 
+```{r, warning = FALSE, message = FALSE, cache=TRUE}
+# read in the file from url
+samples <- read_csv("https://osf.io/cxp2w/download")
+# look at the first 6 lines
+samples
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Import tx 2 gene file: 
+```{r}
+tx2gene_map <- read_tsv("https://osf.io/a75zm/download")
+txi <- tximport(files = samples$quant_file, type = "salmon", tx2gene = tx2gene_map)
+colnames(txi$counts) <- samples$sample
+```
+
+Make DESeq2 object: 
+```{r}
+dds <- DESeqDataSetFromTximport(txi = txi, 
+                                colData = samples, 
+                                design = ~condition)
+dds$condition <- relevel(dds$condition, ref = "wt") # make wild-type the reference to which expression in treatment samples is compared to 
+```
+
+Run DESeq2: 
