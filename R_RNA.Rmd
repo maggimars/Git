@@ -122,6 +122,97 @@ PCA
 #ggsave("vsd_PCA.png", device="png") # to save the plot
 ```
 
+```{r}
+install.packages("devtools")
+                 
+```
+
+## HeatMaps
+
+rlog HeatMap:
+```{r}
+#install.packages("RColorBrewer")
+#install.packages("pheatmap")
+
+library(RColorBrewer)
+library(pheatmap)
+
+df <- as.data.frame(colData(rld)[,c("condition", "sample")])
+
+mat_colors1<-list(sample = brewer.pal(12, "Paired")[0:6])
+names(mat_colors1$sample)<- df$sample
+
+mat_colors <- list(condition = brewer.pal(12, "Paired")[7:8])
+names(mat_colors$condition) <- c("wt", "snf2")
+
+genes <- order(res$padj)[1:1000]
+
+ pheatmap(assay(rld)[genes, ], cluster_rows=TRUE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df, annotation_colors = c(mat_colors1, mat_colors), fontsize = 12)
+```
+
+variance stabilized HeatMap: 
+```{r}
+df <- as.data.frame(colData(vsd)[,c("condition", "sample")])
+
+mat_colors1<-list(sample = brewer.pal(12, "Paired")[0:6])
+names(mat_colors1$sample)<- df$sample
+
+mat_colors <- list(condition = brewer.pal(12, "Paired")[7:8])
+names(mat_colors$condition) <- c("wt", "snf2")
+
+genes <- order(res$padj)[1:1000]
+
+ pheatmap(assay(vsd)[genes, ], cluster_rows=TRUE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df, annotation_colors = c(mat_colors1, mat_colors), fontsize = 12)
+```
+
+Another option for heat maps: 
+plot the difference from the mean for each sample 
+(and optionally change default colors)
+
+#
+```{r}
+#devtools::install_github("karthik/wesanderson")
+```
+
+With Rlog transformed data:
+```{r}
+library(wesanderson)
+pal <- wes_palette(name = "Zissou1", n=2000 , type= "continuous")
+
+mat_colors1<-list(sample = wes_palette("IsleofDogs1", 6))
+names(mat_colors1$sample)<- df$sample
+
+mat_colors <- list(condition = wes_palette("Cavalcanti1")[4:5])
+names(mat_colors$condition) <- c("wt", "snf2")
+
+
+mat <- assay(rld)[genes, ]
+mat <- mat - rowMeans(mat)
+
+df <- as.data.frame(colData(rld)[,c("condition", "sample")])
+
+pheatmap(mat,  cluster_rows=TRUE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df, annotation_colors = c(mat_colors1, mat_colors), fontsize = 12, color = pal)
+
+```
+
+Same but with variance stabilizing function:
+```{r}
+mat <- assay(vsd)[genes, ]
+mat <- mat - rowMeans(mat)
+
+df <- as.data.frame(colData(vsd)[,c("condition", "sample")])
+
+pheatmap(mat,  cluster_rows=TRUE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df, annotation_colors = c(mat_colors1, mat_colors), fontsize = 12, color = pal)
+
+```
+
+
+
+
 
 
 
