@@ -15,16 +15,17 @@ Read the docs: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/i
 
 Installs:
 ```{r}
-#bioClite(GSEAbase)
-#bioClite("clusterProfiler")
-#install.packages("devtools")
-#install.packages("RColorBrewer")
-#install.packages("pheatmap")
-#devtools::install_github("karthik/wesanderson")
-#biocLite("org.Sc.sgd.db")
-#biocLite("GOstats")
-#biocLite(edgeR)
-#install.packages("treemap")
+source("https://bioconductor.org/biocLite.R") # calls the package from the source
+biocLite("GSEAbase")
+biocLite("clusterProfiler")
+install.packages("devtools")
+install.packages("RColorBrewer")
+install.packages("pheatmap")
+devtools::install_github("karthik/wesanderson")
+biocLite("org.Sc.sgd.db")
+biocLite("GOstats")
+biocLite("edgeR")
+install.packages("treemap")
 ```
 
 
