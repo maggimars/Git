@@ -250,7 +250,7 @@ head(goframeData)
 ```
 
 Now turn this into a GO frame for GOstats:
-```{r}
+```{r, warning = FALSE, message= FALSE}
 goFrame<- GOFrame(goframeData)
 goAllFrame<- GOAllFrame(goFrame)
 gsc <- GeneSetCollection(goAllFrame, setType = GOCollection())

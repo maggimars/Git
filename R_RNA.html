@@ -457,73 +457,9 @@ head(goframeData)</code></pre>
 ## 5 GO:0006814      IMP    ENA6
 ## 6 GO:0006314      IMP    ENS2</code></pre>
 <p>Now turn this into a GO frame for GOstats:</p>
-<pre class="r"><code>goFrame&lt;- GOFrame(goframeData)</code></pre>
-<pre><code>## Loading required package: RSQLite</code></pre>
-<pre><code>## Loading required package: GO.db</code></pre>
-<pre class="r"><code>goAllFrame&lt;- GOAllFrame(goFrame)</code></pre>
-<pre><code>## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries
-
-## Warning in result_fetch(res@ptr, n = n): Don't need to call dbFetch() for
-## statements, only for queries</code></pre>
-<pre class="r"><code>gsc &lt;- GeneSetCollection(goAllFrame, setType = GOCollection())</code></pre>
+<pre class="r"><code>goFrame&lt;- GOFrame(goframeData)
+goAllFrame&lt;- GOAllFrame(goFrame)
+gsc &lt;- GeneSetCollection(goAllFrame, setType = GOCollection())</code></pre>
 <div id="go-terms-enriched-in-up-regulated-genes" class="section level3">
 <h3>GO terms enriched in UP regulated genes:</h3>
 <p>get data frame of DESeq2 results:</p>
