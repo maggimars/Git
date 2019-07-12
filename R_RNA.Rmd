@@ -385,19 +385,21 @@ write.csv(UpEnsemble, "upEnsembleIDs.csv", row.names = FALSE, col.names = FALSE,
 
 for GOrilla:
 http://cbl-gorilla.cs.technion.ac.il/
-- Look in the files pane, open `upEnsembleIDs.csv`
-- delete the "x" header
-- copy all (command A)
-- paste into GOrilla website
-- shows GO hierarchical organization
-- shows all enriched GO terms (nested)
-- function `enrichGO` in clusterProfiler package 
+        
+- Look in the files pane, open `upEnsembleIDs.csv`          
+- delete the "x" header           
+- copy all (command A)            
+- paste into GOrilla website        
+- shows GO hierarchical organization        
+- shows all enriched GO terms (nested)        
+- function `enrichGO` in clusterProfiler package        
 
 KEGG annotation and pathway enrichment is another type of functional enrichment that can be more useful than GO terms. 
 https://www.kegg.jp/
 
-some usefull tools: 
-- function `kegga` in edgeR package (bioconductor)
-- pathview package (bioconductor)
-- iPath3, interactive: https://pathways.embl.de/
+some useful KEGG tools:
+          
+- function `kegga` in edgeR package (bioconductor)        
+- pathview package (bioconductor)         
+- iPath3, interactive: https://pathways.embl.de/        
 
