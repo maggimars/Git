@@ -67,6 +67,8 @@ summary(res, alpha = 0.05) # default significance cut-off is 0.1, changing alpha
 
 # Visualizing RNA-seq results 
 
+We will now make some plots to visualize our data. Go to your terminal and make a folder called `figues` where we will store the plots that we will make. 
+
 ## Normalization
 
 **Count Data Transformations:** 
@@ -97,13 +99,13 @@ data1 <- plotPCA(rld, returnData=TRUE)
 data1$group<-gsub(" : ","_",as.character(data1$group))
 percentVar1 <- round(100 * attr(data1, "percentVar"))
 
-PCA<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
+PCA_rld<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
   geom_point(size=9, alpha = 0.8) + scale_colour_manual(values = c("#44aabb","#bbbbbb"))+
   xlab(paste0("PC1: ",percentVar1[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar1[2],"% variance")) +
   theme(text = element_text(size=20)) + ggtitle("rlog PCA")
-PCA
-#ggsave("vsd_PCA.png", device="png") # to save the plot
+PCA_rld
+#ggsave("figures/vsd_PCA.png", device="png") # to save the plot
 ```
 
 
@@ -113,18 +115,18 @@ data1 <- plotPCA(vsd, returnData=TRUE)
 data1$group<-gsub(" : ","_",as.character(data1$group))
 percentVar1 <- round(100 * attr(data1, "percentVar"))
 
-PCA<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
+PCA_vsd<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
   geom_point(size=9, alpha = 0.8) + scale_colour_manual(values = c("#44aabb","#bbbbbb"))+
   xlab(paste0("PC1: ",percentVar1[1],"% variance")) +
   ylab(paste0("PC2: ",percentVar1[2],"% variance")) +
   theme(text = element_text(size=20)) + ggtitle("vst PCA")
-PCA
-#ggsave("vsd_PCA.png", device="png") # to save the plot
+PCA_vsd
+#ggsave("figures/vsd_PCA.png", device="png") # to save the plot
 ```
 
 ```{r}
 install.packages("devtools")
-                 
+library(devtools)                 
 ```
 
 ## HeatMaps
@@ -137,7 +139,7 @@ rlog HeatMap:
 library(RColorBrewer)
 library(pheatmap)
 
-df <- as.data.frame(colData(rld)[,c("condition", "sample")])
+df <- as.data.frame(colData(rld)[,c("condition", "sample")]) #colData is a function in SummarizedExperiment
 
 mat_colors1<-list(sample = brewer.pal(12, "Paired")[0:6])
 names(mat_colors1$sample)<- df$sample
@@ -153,7 +155,7 @@ genes <- order(res$padj)[1:1000]
 
 variance stabilized HeatMap: 
 ```{r}
-df <- as.data.frame(colData(vsd)[,c("condition", "sample")])
+df <- as.data.frame(colData(vsd)[,c("condition", "sample")]) # build a data frame with the variables (sample and condition in this case)
 
 pheatmap(assay(vsd)[genes, ], cluster_rows=TRUE, show_rownames=FALSE, show_colnames = FALSE,
          cluster_cols=FALSE, annotation_col=df, annotation_colors = c(mat_colors1, mat_colors), fontsize = 12)
@@ -238,7 +240,7 @@ library("org.Sc.sgd.db") # this is information about yeast genes! must be so nic
 ```
 
 ```{r}
-GO_df = toTable(org.Sc.sgdGO)
+GO_df <- toTable(org.Sc.sgdGO)
 head(GO_df)
 tail(GO_df)
 ```
