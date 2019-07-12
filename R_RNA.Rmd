@@ -1,29 +1,47 @@
 ---
 title: "R_RNA"
-output: html_document:
-    number_sections: yes
-    theme: cerulean
-    toc: yes
-    toc_depth: 5
-    toc_float: yes
-  pdf_document:
-    toc: yes
-    toc_depth: '5'
+output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(cache=TRUE, fig.path='figures/', fig.width=8, fig.height=5 )
 ```
+by adding `fig.path = 'figures/'` we put all of the figures created when we knit this document into a directory called `figures`
+
 
 # Differential Expression Testing
 
 Read the docs: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html
+
+Installs:
+```{r}
+#bioClite(GSEAbase)
+#bioClite("clusterProfiler")
+#install.packages("devtools")
+#install.packages("RColorBrewer")
+#install.packages("pheatmap")
+#devtools::install_github("karthik/wesanderson")
+#biocLite("org.Sc.sgd.db")
+#biocLite("GOstats")
+#biocLite(edgeR)
+#install.packages("treemap")
+```
+
 
 Load Libraries: 
 ```{r, warning = FALSE, message = FALSE}
 library(tximport)
 library(DESeq2)
 library(tidyverse)
+library("GSEABase")
+library(clusterProfiler)
+library(RColorBrewer)
+library(pheatmap)
+library(wesanderson)
+library(org.Sc.sgd.db)
+library(GOstats)
+library(edgeR)
+library(treemap)
 ```
 
 Import sample metadata: 
@@ -92,7 +110,7 @@ head(assay(vsd), 3)
 ## Ordination
 
 rlog PCA: 
-```{r}
+```{r pca_rld}
 data1 <- plotPCA(rld, returnData=TRUE)
 data1$group<-gsub(" : ","_",as.character(data1$group))
 percentVar1 <- round(100 * attr(data1, "percentVar"))
@@ -103,12 +121,11 @@ PCA<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
   ylab(paste0("PC2: ",percentVar1[2],"% variance")) +
   theme(text = element_text(size=20)) + ggtitle("rlog PCA")
 PCA
-#ggsave("vsd_PCA.png", device="png") # to save the plot
+#ggsave("figures/vsd_PCA.png", device="png") # to save the plot
 ```
 
-
 variance stabilized PCA:
-```{r}
+```{r pca_vst}
 data1 <- plotPCA(vsd, returnData=TRUE)
 data1$group<-gsub(" : ","_",as.character(data1$group))
 percentVar1 <- round(100 * attr(data1, "percentVar"))
@@ -119,23 +136,13 @@ PCA<-ggplot(data1, aes(PC1, PC2, color = condition))+ theme_bw()+
   ylab(paste0("PC2: ",percentVar1[2],"% variance")) +
   theme(text = element_text(size=20)) + ggtitle("vst PCA")
 PCA
-#ggsave("vsd_PCA.png", device="png") # to save the plot
-```
-
-```{r}
-install.packages("devtools")
-                 
+#ggsave("figures/vsd_PCA.png", device="png") # to save the plot
 ```
 
 ## HeatMaps
 
 rlog HeatMap:
-```{r}
-#install.packages("RColorBrewer")
-#install.packages("pheatmap")
-
-library(RColorBrewer)
-library(pheatmap)
+```{r heatmap_rld}
 
 df <- as.data.frame(colData(rld)[,c("condition", "sample")])
 
@@ -152,7 +159,7 @@ genes <- order(res$padj)[1:1000]
 ```
 
 variance stabilized HeatMap: 
-```{r}
+```{r heatmap_vst}
 df <- as.data.frame(colData(vsd)[,c("condition", "sample")])
 
 pheatmap(assay(vsd)[genes, ], cluster_rows=TRUE, show_rownames=FALSE, show_colnames = FALSE,
@@ -163,13 +170,8 @@ Another option for heat maps:
 plot the difference from the mean normalized count across samples 
 (and optionally change default colors)
 
-#
-```{r}
-#devtools::install_github("karthik/wesanderson")
-```
-
 With Rlog transformed data:
-```{r}
+```{r heatmap_rld_meandiff}
 library(wesanderson)
 pal <- wes_palette(name = "Zissou1", n=2000 , type= "continuous")
 
@@ -178,7 +180,6 @@ names(mat_colors1$sample)<- df$sample
 
 mat_colors <- list(condition = wes_palette("Cavalcanti1")[4:5])
 names(mat_colors$condition) <- c("wt", "snf2")
-
 
 mat <- assay(rld)[genes, ]
 mat <- mat - rowMeans(mat)
@@ -191,7 +192,7 @@ pheatmap(mat,  cluster_rows=TRUE, show_rownames=FALSE,
 ```
 
 Same but with variance stabilizing function:
-```{r}
+```{r heatmap_vst_meandiff}
 mat <- assay(vsd)[genes, ]
 mat <- mat - rowMeans(mat)
 
@@ -203,27 +204,59 @@ pheatmap(mat,  cluster_rows=TRUE, show_rownames=FALSE, show_colnames = FALSE,
 ```
 
 
-## cool interactive plotting options
- ....
- 
+Heatmap of sample-to-sample distances
+```{r heatmap_sampledistance}
+sampleDists <- dist(t(assay(vsd)))
+sampleDistMatrix <- as.matrix(sampleDists)
+rownames(sampleDistMatrix) <- paste(vsd$condition, vsd$type, sep="-")
+colnames(sampleDistMatrix) <- NULL
+colors <- colorRampPalette( rev(brewer.pal(9, "Blues")) )(255)
+pheatmap(sampleDistMatrix,
+         clustering_distance_rows=sampleDists,
+         clustering_distance_cols=sampleDists,
+         col=colors)
+```
+
 # Gene Set Enrichment Testing 
 If you remember, we had  598 significantly upregulated genes and 1049 significantly down regulated genes in this data set (this is pretty typical). That is a lot to try to make sense of. If you know you are interested in a specific gene or a specific pathway, you can look for that in your data, but if you are trying to figure out what is generally different betwene treatments, it helps to categaorize and summarize genes by what they do. Two common ways to do this are GO terms and KEGG pathways.
-
 
 ```{r}
 summary(res, alpha = 0.05)
 ```
 
-
 ## GO term enrichment
-
 
 "A GO annotation is a statement about the function of a particular gene. GO annotations are created by associating a gene or gene product with a GO term. Together, these statements comprise a “snapshot” of current biological knowledge. Hence, GO annotations capture statements about how a gene functions at the molecular level, where in the cell it functions, and what biological processes (pathways, programs) it helps to carry out.
 
 Different pieces of knowledge regarding gene function may be established to different degrees, which is why each GO annotation always refers to the evidence upon which it is based. All GO annotations are ultimately supported by the scientific literature, either directly or indirectly. In GO, the supporting evidence is presented in the form of a GO Evidence Codes and either a published reference or description of the methodology used to create the annotation. The GO evidence codes describe the type of evidence and reflect how far removed the annotated assertion is from direct experimental evidence, and whether this evidence was reviewed by an expert biocurator."  -- http://geneontology.org/docs/go-annotations/
 
 
+```{r}
+GO_df = toTable(org.Sc.sgdGO)
+head(GO_df)
+```
 
+This frame comes with all three types of GO terms in one frame, BP = Biological Process, MF = Molecular Function, CC = Cellular COmponenet  
+
+
+Convert the df to the format required for GOstats:
+```{r}
+goframeData = data.frame(GO_df$go_id, GO_df$Evidence, GO_df$systematic_name)
+names(goframeData) = c("GO", "Evidence", "gene_id")
+goframeData$GO <- as.character(goframeData$GO)
+goframeData$Evidence <- as.character(goframeData$Evidence)
+goframeData$gene_id <- as.character((goframeData$gene_id))
+head(goframeData)
+```
+
+Now turn this into a GO frame for GOstats:
+```{r}
+goFrame<- GOFrame(goframeData)
+goAllFrame<- GOAllFrame(goFrame)
+gsc <- GeneSetCollection(goAllFrame, setType = GOCollection())
+```
+
+### GO terms enriched in UP regulated genes:
 
 get data frame of DESeq2 results:
 ```{r}
@@ -231,20 +264,156 @@ DEres <- as.data.frame(res)
 ```
 
 ```{r}
-#biocLite("GOstats")
-#biocLite("org.Sc.sgd.db")
-library(GOstats)
-library("org.Sc.sgd.db") # this is information about yeast genes! must be so nice to work with model orgs ... 
+upFrame <- DEres[DEres$padj <= 0.05 & DEres$log2FoldChange >= 1,]
+upFrame <- upFrame[complete.cases(upFrame),]
+dim(upFrame)
+```
+(by selecting genes with a log2 fold change >1 or <-1, we decrease the number of genes we consider --> this is a 2x change )
+we now have 175 upregulated genes to consider (rather than 598)
+
+```{r}
+universe = Lkeys(org.Sc.sgdGO)
+
+genes = row.names(upFrame)
+params <- GSEAGOHyperGParams(name="Yeast, wt v. snf2", geneSetCollection= gsc, geneIds = genes, universeGeneIds = universe, ontology = "BP", pvalueCutoff = 0.05, conditional = TRUE, testDirection = "over")
+
+Over <- hyperGTest(params)
+
+Over
+```
+
+## Enrichr (edgeR package)
+
+```{r}
+SC <- toTable(org.Sc.sgdGENENAME)
+
+DEres <- as.data.frame(res)
+DEres$systematic_name<- row.names(DEres)
+DEres<- merge(DEres, SC, by="systematic_name")
+
+gene <- DEres$gene_name
+
+gene.df <- bitr(gene, fromType = "GENENAME",
+        toType = c("ENTREZID", "ENSEMBL"),
+        OrgDb = org.Sc.sgd.db)
+names(gene.df)<- c("gene_name", "EntrezID", "ENSEMBL" )
+
+go.df <- bitr(gene, fromType = "GENENAME",
+        toType = c("GO"),
+        OrgDb = org.Sc.sgd.db)
+names(go.df)<- c("gene_name", "GO", "evidence", "ontology")
+
+DEres<- merge(DEres, gene.df, by = "gene_name" )
+
+go_dict <- merge(go.df, gene.df, by= "gene_name")
+
+BPdict <- go_dict[go_dict$ontology == "BP", ]
+
+BPdict<- BPdict[,c(2,6)]
+
+upFrame <- DEres[DEres$padj <= 0.05 & DEres$log2FoldChange > 0.0,]
+upFrame <- upFrame[complete.cases(upFrame),]
+
+universe<- DEres$systematic_name
+gene <- upFrame$systematic_name
+
+enrchdUP_GO<-enricher(gene, pAdjustMethod = "none", universe, pvalueCutoff = 0.05,TERM2GENE= BPdict)
+
+upBP_GOs <- data.frame(enrchdUP_GO)
+
+upBP_GOs
 ```
 
 ```{r}
-GO_df = toTable(org.Sc.sgdGO)
-head(GO_df)
-tail(GO_df)
+upBP_GOs$ID
 ```
 
-This frame comes with all three types of GO terms in one frame, BP = Biological Process, MF = Molecular Function, CC = Cellular COmponenet  
+REVIGO
+http://revigo.irb.hr/
+```{r}
+revigo.names <- c("term_ID","description","freqInDbPercent","uniqueness","dispensability","representative");
+revigo.data <- rbind(c("GO:0016192","vesicle-mediated transport",1.085,0.567,0.000,"vesicle-mediated transport"),
+c("GO:0019344","cysteine biosynthetic process",0.131,0.502,0.000,"cysteine biosynthesis"),
+c("GO:0006333","chromatin assembly or disassembly",0.120,0.236,0.311,"cysteine biosynthesis"),
+c("GO:0042407","cristae formation",0.013,0.294,0.120,"cysteine biosynthesis"));
+
+stuff <- data.frame(revigo.data);
+names(stuff) <- revigo.names;
+
+stuff$uniqueness <- as.numeric( as.character(stuff$uniqueness) );
+stuff$freqInDbPercent <- as.numeric( as.character(stuff$freqInDbPercent) );
+stuff$uniqueness <- as.numeric( as.character(stuff$uniqueness) );
+stuff$dispensability <- as.numeric( as.character(stuff$dispensability) );
+
+treemap(
+	stuff,
+	index = c("representative","description"),
+	vSize = "uniqueness",
+	type = "categorical",
+	vColor = "representative",
+	palette = wes_palette("BottleRocket2"),
+	title = "REVIGO Gene Ontology treemap",
+	inflate.labels = FALSE,      # set this to TRUE for space-filling group labels - good for posters
+	lowerbound.cex.labels = 0,   # try to draw as many labels as possible (still, some small squares may not get a label)
+	bg.labels = "#CCCCCCAA",     # define background color of group labels
+												       # "#CCCCCC00" is fully transparent, "#CCCCCCAA" is semi-transparent grey, NA is opaque
+	position.legend = "none"
+)
+
+```
 
 
 
+
+```{r}
+MFdict <- go_dict[go_dict$ontology == "MF", ]
+MFdict<- MFdict[,c(2,6)]
+
+enrchdUP_GO<-enricher(gene, pAdjustMethod = "none", universe, pvalueCutoff = 0.05,TERM2GENE= MFdict)
+
+upMF_GOs <- data.frame(enrchdUP_GO)
+
+upMF_GOs
+
+```
+
+```{r}
+CCdict <- go_dict[go_dict$ontology == "CC", ]
+CCdict<- CCdict[,c(2,6)]
+
+enrchdUP_GO<-enricher(gene, pAdjustMethod = "none", universe, pvalueCutoff = 0.05,TERM2GENE= CCdict)
+
+upCC_GOs <- data.frame(enrchdUP_GO)
+
+upCC_GOs
+```
+
+for David: https://david.ncifcrf.gov/gene2gene.jsp
+```{r}
+UpEnsemble <- upFrame$ENSEMBL[!is.na(upFrame$ENSEMBL)]
+write.csv(UpEnsemble, "upEnsembleIDs.csv", row.names = FALSE, col.names = FALSE, quote = FALSE )
+```
+- Look in the files pane, open `upEnsembleIDs.csv`
+- delete the "x" header
+- copy all (command A)
+- paste into DAVID website
+**12 "clusters" of genes by function**
+
+
+for GOrilla:
+http://cbl-gorilla.cs.technion.ac.il/
+- Look in the files pane, open `upEnsembleIDs.csv`
+- delete the "x" header
+- copy all (command A)
+- paste into GOrilla website
+- shows GO hierarchical organization
+- shows all enriched GO terms (nested)
+
+KEGG annotation and pathway enrichment is another type of functional enrichment that can be more useful than GO terms. 
+https://www.kegg.jp/
+
+some usefull tools: 
+- `kegga` function in edgeR package (bioconductor)
+- pathview package (bioconductor)
+- iPath3, interactive: https://pathways.embl.de/
 
